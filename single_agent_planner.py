@@ -128,7 +128,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     h_value = h_values[start_loc]
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
-    # closed_list[(root['loc'])] = root
+    closed_list[(root['loc'])] = root
 
     while len(open_list) > 0:
         curr = pop_node(open_list)
@@ -169,7 +169,5 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                 else:
                     closed_list[(child['loc'], child['time'])] = child
                     push_node(open_list, child)
-            else:
-                print('constrained')
 
     return None  # Failed to find solutions
