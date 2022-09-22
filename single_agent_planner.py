@@ -128,7 +128,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     h_value = h_values[start_loc]
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
-    closed_list[(root['loc'])] = root
+    closed_list[((root['loc'], root['time']))] = root
 
     while len(open_list) > 0:
         curr = pop_node(open_list)
@@ -161,8 +161,8 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
             # Only push child node in open_list if child note doesn't violate constraint:
             if not is_constrained(next_loc=child['loc'], next_time=child['time'], constraint_table=constraint_dict):
-                if (child['loc']) in closed_list:
-                    existing_node = closed_list[(child['loc'])]
+                if ((child['loc'], child['time'])) in closed_list:
+                    existing_node = closed_list[(child['loc'], child['time'])]
                     if compare_nodes(child, existing_node):
                         closed_list[(child['loc'], child['time'])] = child
                         push_node(open_list, child)

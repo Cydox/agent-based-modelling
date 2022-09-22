@@ -17,7 +17,7 @@ class IndependentSolver(object):
         self.num_of_agents = len(goals)
 
         self.CPU_time = 0
-        self.constraints = [{'agent': 0, 'loc': (1, 3), 'timestep': x} for x in range(10)]  # (y, x) from top left
+        self.constraints = [{'agent': 1, 'loc': (1, 3), 'timestep': x} for x in range(10)]  # (y, x) from top left
 
         # compute heuristics for the low-level search
         self.heuristics = []
