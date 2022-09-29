@@ -47,17 +47,33 @@ def compute_heuristics(my_map, goal):
     return h_values
 
 
-def build_constraint_table(constraints, agent):
+def build_constraint_table(constraints: list, agent: int) -> dict:
+    """" Creates a time keyed dictionary with all the constraints belonging to a certain agent. Can be vertex or edge
+    constraints. The constraint types are differentiated by length of 'loc' keyed items in the constraints input
+    list. So the returned dictionary has the timestep as keys, each with a list of constraint locations (either a
+    tuple for vertex constraints, or a list of two constraints for edge constraints) as items.
+
+    :param constraints - the list of constrained dictionaries.
+    :param agent - the id of the agent for which the constraint table must be created
+
+    :return The time-keyed constraint dictionary for the specific agent.
+    """
     ##############################
-    # Task 1.2/1.3: Return a table that constains the list of constraints of
+    # Task 1.2/1.3: Return a table that contains the list of constraints of
     #               the given agent for each time step. The table can be used
     #               for a more efficient constraint violation check in the 
     #               is_constrained function.
 
-    constraint_dict = {x['timestep']: x['loc'] for x in constraints if x['agent'] == agent}
+    constraint_dict = {}
+
+    for constraint in constraints:
+        if constraint['agent'] == agent:
+            if constraint['timestep'] not in constraint_dict.keys():  # if constraint timestep not in dict, add it
+                constraint_dict[constraint['timestep']] = [constraint['loc']]
+            else:  # if constraint timestep already in dict, append to the list of constraints.
+                constraint_dict[constraint['timestep']].append(constraint['loc'])
 
     return constraint_dict
-
 
 
 def get_location(path, time):
@@ -79,16 +95,29 @@ def get_path(goal_node):
     return path
 
 
-def is_constrained(next_loc, next_time, constraint_table):
+def is_constrained(curr_loc: tuple, next_loc: tuple, next_time: int, constraint_table: dict) -> bool:
+    """"
+    Checks if the agents move is allowed for a specific state or not.
+
+    :param curr_loc: the current location of the agent
+    :param next_loc: the aimed location for the agent
+    :param next_time: the next timestep
+    :param constraint_table: the time-keyed dictionary with agent constraints.
+
+    :return boolean
+    """
+
     ##############################
     # Task 1.2/1.3: Check if a move from curr_loc to next_loc at time step next_time violates
     #               any given constraint. For efficiency the constraints are indexed in a constraint_table
     #               by time step, see build_constraint_table.
 
     try:
-        if constraint_table[next_time] == next_loc:
-            return True
-    except KeyError:
+        for constraint in constraint_table[next_time]:  # loop through all constraints active for the next_time
+            if constraint == next_loc or constraint == [curr_loc, next_loc]:
+                # Check if agents move is constrained via vertex constrained or edge constraint.
+                return True
+    except KeyError:  # if there are no constraints for the next_time: pass (and thus return false)
         pass
 
     return False
@@ -160,9 +189,12 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                          'parent': curr,
                          'time': curr['time'] + 1}
 
-            # Only push child node in open_list if child note doesn't violate constraint:
-            if not is_constrained(next_loc=child['loc'], next_time=child['time'], constraint_table=constraint_dict):
-                if ((child['loc'], child['time'])) in closed_list:
+            # Only push child node in open_list if child note doesn't violate constraints:
+            if not is_constrained(curr_loc=curr['loc'],
+                                  next_loc=child['loc'],
+                                  next_time=child['time'],
+                                  constraint_table=constraint_dict):
+                if (child['loc'], child['time']) in closed_list:
                     existing_node = closed_list[(child['loc'], child['time'])]
                     if compare_nodes(child, existing_node):
                         # closed_list[(child['loc'], child['time'])] = child
