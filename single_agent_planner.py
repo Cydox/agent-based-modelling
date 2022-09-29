@@ -137,6 +137,15 @@ def compare_nodes(n1, n2):
     """Return true if n1 is better than n2."""
     return n1['g_val'] + n1['h_val'] < n2['g_val'] + n2['h_val']
 
+def goal_constrained(goal_loc, curr_time, constraint_table):
+    keys = [key for key in constraint_table.keys() if key > curr_time]
+
+    for key in keys:
+        if goal_loc in constraint_table[key]:
+            return True
+
+    return False
+
 
 def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     """ my_map      - binary obstacle map
@@ -164,7 +173,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         curr = pop_node(open_list)
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
-        if curr['loc'] == goal_loc:
+        if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], constraint_dict):
             return get_path(curr)
 
         for dir in range(5):
