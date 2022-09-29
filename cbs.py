@@ -3,7 +3,7 @@ import time as timer
 import heapq
 import random
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
-
+from copy import deepcopy
 
 def detect_collision(path1: list, path2: list) -> tuple:
     """"For two anonymous paths, return the location and timestep for the first collision. That can be either a
@@ -80,15 +80,12 @@ def standard_splitting(collision):
     agents = [collision['a1'], collision['a2']]
     constraints = []
 
-    if len(collision['loc']) == 1:  # vertex collision
-
-        for agent in agents:
-            constraints.append({'agent': agent, 'loc': collision['loc'], 'timestep': collision['timestep']})
-
-    elif len(collision['loc']) == 2:  # edge collision
-
-        constraints.append({'agent': agents[0], 'loc': [collision['loc']], 'timestep': collision['timestep']})
-        constraints.append({'agent': agents[1], 'loc': [collision['loc'][::-1]], 'timestep': collision['timestep']})
+    if type(collision['loc']) is tuple:
+        constraints.append({'agent': agents[0], 'loc': collision['loc'], 'timestep': collision['timestep']})
+        constraints.append({'agent': agents[1], 'loc': collision['loc'], 'timestep': collision['timestep']})
+    else:
+        constraints.append({'agent': agents[0], 'loc': collision['loc'], 'timestep': collision['timestep']})
+        constraints.append({'agent': agents[1], 'loc': collision['loc'][::-1], 'timestep': collision['timestep']})
 
     return constraints
 
@@ -187,7 +184,7 @@ class CBSSolver(object):
 
                 child = {'cost': 0,
                          'constraints': P['constraints'] + [constraint],
-                         'paths': P['paths'],
+                         'paths': deepcopy(P['paths']),
                          'collisions': []}
 
                 path = a_star(
@@ -200,9 +197,9 @@ class CBSSolver(object):
                 )
 
                 if path is None:
-                    pass  # TODO: check if this is correct
+                    continue  # TODO: check if this is correct
 
-                child['paths'][agent] = path
+                child['paths'][agent] = deepcopy(path)
                 child['cost'] = get_sum_of_cost(child['paths'])
                 child['collisions'] = detect_collisions(child['paths'])
 

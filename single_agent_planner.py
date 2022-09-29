@@ -96,7 +96,7 @@ def get_path(goal_node):
 
 def is_constrained(curr_loc: tuple, next_loc: tuple, next_time: int, constraint_table: dict) -> bool:
     """"
-    Checks if the agents move is allowed for a specific state or not.
+    Checks if the agents intended move is allowed for a specific state or not.
 
     :param curr_loc: the current location of the agent
     :param next_loc: the aimed location for the agent
