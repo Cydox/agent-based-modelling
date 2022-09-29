@@ -177,6 +177,11 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
     while len(open_list) > 0:
         curr = pop_node(open_list)
+
+        if curr['g_val'] > 20 * root['h_val']:
+            # if g_val exceeds root's h_val by a lot, the path cannot be found and the code should stop.
+            break
+
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
         if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], constraint_dict):
