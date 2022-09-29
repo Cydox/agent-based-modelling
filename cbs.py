@@ -35,7 +35,20 @@ def standard_splitting(collision):
     #                          specified timestep, and the second constraint prevents the second agent to traverse the
     #                          specified edge at the specified timestep
 
-    pass
+    agents = [collision['a1'], collision['a2']]
+    constraints = []
+
+    if len(collision['loc']) == 1: # vertex collision
+
+        for agent in agents:
+            constraints.append({'agent': agent, 'loc': collision['loc'], 'timestep': collision['timestep']})
+
+    elif len(collision['loc']) == 2: # edge collision
+        
+        constraints.append({'agent': agents[0], 'loc': [collision['loc']], 'timestep': collision['timestep']})
+        constraints.append({'agent': agents[1], 'loc': [collision['loc'][::-1]], 'timestep': collision['timestep']})
+
+    return constraints
 
 
 def disjoint_splitting(collision):
