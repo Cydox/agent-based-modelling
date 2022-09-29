@@ -95,11 +95,12 @@ def is_constrained(next_loc, next_time, constraint_table):
 
 
 def push_node(open_list, node):
-    heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], node))
+    hashv = hash(repr(node))
+    heapq.heappush(open_list, (node['g_val'] + node['h_val'], node['h_val'], node['loc'], hashv, node))
 
 
 def pop_node(open_list):
-    _, _, _, curr = heapq.heappop(open_list)
+    _, _, _, _, curr = heapq.heappop(open_list)
     return curr
 
 
@@ -128,7 +129,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     h_value = h_values[start_loc]
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
-    closed_list[((root['loc'], root['time']))] = root
+    # closed_list[((root['loc'], root['time']))] = root
 
     while len(open_list) > 0:
         curr = pop_node(open_list)
@@ -164,10 +165,12 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                 if ((child['loc'], child['time'])) in closed_list:
                     existing_node = closed_list[(child['loc'], child['time'])]
                     if compare_nodes(child, existing_node):
-                        closed_list[(child['loc'], child['time'])] = child
+                        # closed_list[(child['loc'], child['time'])] = child
                         push_node(open_list, child)
                 else:
-                    closed_list[(child['loc'], child['time'])] = child
+                    # closed_list[(child['loc'], child['time'])] = child
                     push_node(open_list, child)
+
+        closed_list[(curr['loc'], curr['time'])] = curr
 
     return None  # Failed to find solutions
