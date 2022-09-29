@@ -123,6 +123,7 @@ class CBSSolver(object):
         self.CPU_time = 0
 
         self.open_list = []
+        self.closed_list = []
 
         # compute heuristics for the low-level search
         self.heuristics = []
@@ -136,7 +137,7 @@ class CBSSolver(object):
 
     def pop_node(self):
         _, _, id, node = heapq.heappop(self.open_list)
-        # print("Expand node {}".format(id))
+        print("Expand node {}".format(id))
         self.num_of_expanded += 1
         return node
 
@@ -153,6 +154,7 @@ class CBSSolver(object):
         # paths         - list of paths, one for each agent
         #               [[(x11, y11), (x12, y12), ...], [(x21, y21), (x22, y22), ...], ...]
         # collisions     - list of collisions in paths
+
         root = {'cost': 0,
                 'constraints': [],
                 'paths': [],
@@ -171,20 +173,20 @@ class CBSSolver(object):
 
         while len(self.open_list) > 0:
 
-            P = self.pop_node()
+            parent = self.pop_node()
 
-            if P['collisions'] == 0:
-                return P['paths']
+            if len(parent['collisions']) == 0:
+                return parent['paths']
 
-            collision = P['collisions'][0]
+            collision = parent['collisions'][0]
             constraints = standard_splitting(collision)
 
             for constraint in constraints:
                 agent = constraint['agent']
 
                 child = {'cost': 0,
-                         'constraints': P['constraints'] + [constraint],
-                         'paths': deepcopy(P['paths']),
+                         'constraints': parent['constraints'] + [constraint],
+                         'paths': deepcopy(parent['paths']),
                          'collisions': []}
 
                 path = a_star(
@@ -197,11 +199,11 @@ class CBSSolver(object):
                 )
 
                 if path is None:
-                    continue  # TODO: check if this is correct
+                    continue
 
                 child['paths'][agent] = deepcopy(path)
                 child['cost'] = get_sum_of_cost(child['paths'])
-                child['collisions'] = detect_collisions(child['paths'])
+                child['collisions'] = deepcopy(detect_collisions(child['paths']))
 
                 self.push_node(child)
 
@@ -214,11 +216,13 @@ class CBSSolver(object):
             #                standard_splitting function). Add a new child node to your open list for each constraint
             #           Ensure to create a copy of any objects that your child nodes might inherit
 
-        self.print_results(root)
         return root['paths']
 
     def print_results(self, node):
         print("\n Found a solution! \n")
+
+        print(node['paths'])
+
         CPU_time = timer.time() - self.start_time
         print("CPU time (s):    {:.2f}".format(CPU_time))
         print("Sum of costs:    {}".format(get_sum_of_cost(node['paths'])))
