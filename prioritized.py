@@ -44,7 +44,7 @@ class PrioritizedPlanningSolver(object):
                             {
                                 'agent': agent,
                                 'loc': path[time],
-                                'timestep': time
+                                'timestep': time,
                             }
                         )
                         constraints.append(  # apply edge constraints
@@ -54,16 +54,16 @@ class PrioritizedPlanningSolver(object):
                                 'timestep': time
                             }
                         )
+                # apply vertex constraint for finished agents. 'start_time' is when the constraint should apply
+                constraints.append(
+                    {
+                        'agent': agent,
+                        'loc': path[-1],
+                        'timestep': -1,
+                        'start_time': len(path) - 1
+                    }
+                )
 
-            ##############################
-            # Task 2: Add constraints here
-            #         Useful variables:
-            #            * path contains the solution path of the current (i'th) agent, e.g., [(1,1),(1,2),(1,3)]
-            #            * self.num_of_agents has the number of total agents
-            #            * constraints: array of constraints to consider for future A* searches
-
-
-            ##############################
 
         self.CPU_time = timer.time() - start_time
 

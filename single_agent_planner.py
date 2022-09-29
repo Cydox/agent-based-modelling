@@ -50,8 +50,7 @@ def compute_heuristics(my_map, goal):
 def build_constraint_table(constraints: list, agent: int) -> dict:
     """" Creates a time keyed dictionary with all the constraints belonging to a certain agent. Can be vertex or edge
     constraints. The constraint types are differentiated by length of 'loc' keyed items in the constraints input
-    list. So the returned dictionary has the timestep as keys, each with a list of constraint locations (either a
-    tuple for vertex constraints, or a list of two constraints for edge constraints) as items.
+    list. So the returned dictionary has the timestep as keys, each with a list of constraints.
 
     :param constraints - the list of constrained dictionaries.
     :param agent - the id of the agent for which the constraint table must be created
@@ -69,9 +68,9 @@ def build_constraint_table(constraints: list, agent: int) -> dict:
     for constraint in constraints:
         if constraint['agent'] == agent:
             if constraint['timestep'] not in constraint_dict.keys():  # if constraint timestep not in dict, add it
-                constraint_dict[constraint['timestep']] = [constraint['loc']]
+                constraint_dict[constraint['timestep']] = [constraint]
             else:  # if constraint timestep already in dict, append to the list of constraints.
-                constraint_dict[constraint['timestep']].append(constraint['loc'])
+                constraint_dict[constraint['timestep']].append(constraint)
 
     return constraint_dict
 
@@ -114,10 +113,17 @@ def is_constrained(curr_loc: tuple, next_loc: tuple, next_time: int, constraint_
 
     try:
         for constraint in constraint_table[next_time]:  # loop through all constraints active for the next_time
-            if constraint == next_loc or constraint == [curr_loc, next_loc]:
+            if constraint['loc'] == next_loc or constraint['loc'] == [curr_loc, next_loc]:
                 # Check if agents move is constrained via vertex constrained or edge constraint.
                 return True
     except KeyError:  # if there are no constraints for the next_time: pass (and thus return false)
+        pass
+
+    try:  # check if there is a vertex constraint due to already finished agents
+        for constraint in constraint_table[-1]:
+            if constraint['start_time'] <= next_time and constraint['loc'] == next_loc:
+                return True
+    except KeyError:
         pass
 
     return False
