@@ -66,6 +66,7 @@ def detect_collisions(paths):
 
     return collisions
 
+
 def standard_splitting(collision):
     ##############################
     # Task 3.2: Return a list of (two) constraints to resolve the given collision
@@ -79,13 +80,13 @@ def standard_splitting(collision):
     agents = [collision['a1'], collision['a2']]
     constraints = []
 
-    if len(collision['loc']) == 1: # vertex collision
+    if len(collision['loc']) == 1:  # vertex collision
 
         for agent in agents:
             constraints.append({'agent': agent, 'loc': collision['loc'], 'timestep': collision['timestep']})
 
-    elif len(collision['loc']) == 2: # edge collision
-        
+    elif len(collision['loc']) == 2:  # edge collision
+
         constraints.append({'agent': agents[0], 'loc': [collision['loc']], 'timestep': collision['timestep']})
         constraints.append({'agent': agents[1], 'loc': [collision['loc'][::-1]], 'timestep': collision['timestep']})
 
@@ -133,12 +134,12 @@ class CBSSolver(object):
 
     def push_node(self, node):
         heapq.heappush(self.open_list, (node['cost'], len(node['collisions']), self.num_of_generated, node))
-        print("Generate node {}".format(self.num_of_generated))
+        # print("Generate node {}".format(self.num_of_generated))
         self.num_of_generated += 1
 
     def pop_node(self):
         _, _, id, node = heapq.heappop(self.open_list)
-        print("Expand node {}".format(id))
+        # print("Expand node {}".format(id))
         self.num_of_expanded += 1
         return node
 
@@ -159,6 +160,7 @@ class CBSSolver(object):
                 'constraints': [],
                 'paths': [],
                 'collisions': []}
+
         for i in range(self.num_of_agents):  # Find initial path for each agent
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, root['constraints'])
@@ -170,25 +172,53 @@ class CBSSolver(object):
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
 
-        # Task 3.1: Testing
-        print(root['collisions'])
+        while len(self.open_list) > 0:
 
-        # Task 3.2: Testing
-        for collision in root['collisions']:
-            print(standard_splitting(collision))
+            P = self.pop_node()
 
-        ##############################
-        # Task 3.3: High-Level Search
-        #           Repeat the following as long as the open list is not empty:
-        #             1. Get the next node from the open list (you can use self.pop_node()
-        #             2. If this node has no collision, return solution
-        #             3. Otherwise, choose the first collision and convert to a list of constraints (using your
-        #                standard_splitting function). Add a new child node to your open list for each constraint
-        #           Ensure to create a copy of any objects that your child nodes might inherit
+            if P['collisions'] == 0:
+                return P['paths']
+
+            collision = P['collisions'][0]
+            constraints = standard_splitting(collision)
+
+            for constraint in constraints:
+                agent = constraint['agent']
+
+                child = {'cost': 0,
+                         'constraints': P['constraints'] + [constraint],
+                         'paths': P['paths'],
+                         'collisions': []}
+
+                path = a_star(
+                    self.my_map,
+                    self.starts[agent],
+                    self.goals[agent],
+                    self.heuristics[agent],
+                    agent,
+                    child['constraints']
+                )
+
+                if path is None:
+                    pass  # TODO: check if this is correct
+
+                child['paths'][agent] = path
+                child['cost'] = get_sum_of_cost(child['paths'])
+                child['collisions'] = detect_collisions(child['paths'])
+
+                self.push_node(child)
+
+            ##############################
+            # Task 3.3: High-Level Search
+            #           Repeat the following as long as the open list is not empty:
+            #             1. Get the next node from the open list (you can use self.pop_node()
+            #             2. If this node has no collision, return solution
+            #             3. Otherwise, choose the first collision and convert to a list of constraints (using your
+            #                standard_splitting function). Add a new child node to your open list for each constraint
+            #           Ensure to create a copy of any objects that your child nodes might inherit
 
         self.print_results(root)
         return root['paths']
-
 
     def print_results(self, node):
         print("\n Found a solution! \n")
