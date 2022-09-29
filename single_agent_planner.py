@@ -179,7 +179,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     while len(open_list) > 0:
         curr = pop_node(open_list)
 
-        if curr['g_val'] > 20 * root['h_val']:
+        if curr['g_val'] > 10 * root['h_val']:
             # if g_val exceeds root's h_val by a lot, the path cannot be found and the code should stop.
             break
 
@@ -191,8 +191,15 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         for dir in range(5):
             if dir < 4:
                 child_loc = move(curr['loc'], dir)
-                if my_map[child_loc[0]][child_loc[1]]:  # filters out obstacles
+
+                # filters out obstacles
+                try:
+                    if my_map[child_loc[0]][child_loc[1]] or child_loc[0] < 0 or child_loc[1] < 0:
+                        # if this is true, child loc is either an obstacle or outside of map on left or top side
+                        continue
+                except IndexError:  # index error means child_loc is outside of map on lower or right side
                     continue
+
                 child = {'loc': child_loc,
                          'g_val': curr['g_val'] + 1,
                          'h_val': h_values[child_loc],

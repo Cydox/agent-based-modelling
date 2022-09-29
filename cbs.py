@@ -137,7 +137,7 @@ class CBSSolver(object):
 
     def pop_node(self):
         _, _, id, node = heapq.heappop(self.open_list)
-        print("Expand node {}".format(id))
+        # print("Expand node {}".format(id))
         self.num_of_expanded += 1
         return node
 
@@ -176,6 +176,7 @@ class CBSSolver(object):
             parent = self.pop_node()
 
             if len(parent['collisions']) == 0:
+                self.print_results(parent)
                 return parent['paths']
 
             collision = parent['collisions'][0]
@@ -220,8 +221,6 @@ class CBSSolver(object):
 
     def print_results(self, node):
         print("\n Found a solution! \n")
-
-        print(node['paths'])
 
         CPU_time = timer.time() - self.start_time
         print("CPU time (s):    {:.2f}".format(CPU_time))

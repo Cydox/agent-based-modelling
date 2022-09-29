@@ -127,7 +127,7 @@ if __name__ == '__main__':
 
     for file in sorted(glob.glob(args.instance)):
 
-        print("***Import an instance***")
+        print(f"***Import an instance: {file}***")
         my_map, starts, goals = import_mapf_instance(file)
         print_mapf_instance(my_map, starts, goals)
 
@@ -159,4 +159,5 @@ if __name__ == '__main__':
             animation = Animation(my_map, starts, goals, paths)
             # animation.save("output.mp4", 1.0) # install ffmpeg package to use this option
             animation.show()
+
     result_file.close()
