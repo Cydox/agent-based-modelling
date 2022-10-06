@@ -144,12 +144,14 @@ def compare_nodes(n1, n2):
     return n1['g_val'] + n1['h_val'] < n2['g_val'] + n2['h_val']
 
 
-def goal_constrained(goal_loc, curr_time, constraint_table):
+def goal_constrained(goal_loc, curr_time, curr_loc, constraint_table):
     keys = [key for key in constraint_table.keys() if key > curr_time]
 
     for key in keys:
         if goal_loc in [constraint['loc'] for constraint in constraint_table[key]]:
             return True
+        # elif goal_loc in [constraint['loc'][1] for constraint in constraint_table[key] if constraint['loc'][0] == curr_loc]:
+        #     return True
 
     return False
 
