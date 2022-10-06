@@ -185,7 +185,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
-        if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], constraint_dict):
+        if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], curr['loc'], constraint_dict):
             return get_path(curr)
 
         for dir in range(5):

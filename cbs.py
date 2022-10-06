@@ -172,7 +172,6 @@ class CBSSolver(object):
         self.push_node(root)
 
         while len(self.open_list) > 0:
-
             parent = self.pop_node()
 
             if len(parent['collisions']) == 0:
