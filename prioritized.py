@@ -23,7 +23,7 @@ class PrioritizedPlanningSolver(object):
         for goal in self.goals:
             self.heuristics.append(compute_heuristics(my_map, goal))
 
-    def find_solution(self):
+    def find_solution(self, print_results=True, return_costs=False):
         """ Finds paths for all agents from their start locations to their goal locations."""
 
         start_time = timer.time()
@@ -67,8 +67,13 @@ class PrioritizedPlanningSolver(object):
 
         self.CPU_time = timer.time() - start_time
 
-        print("\n Found a solution! \n")
-        print("CPU time (s):    {:.2f}".format(self.CPU_time))
-        print("Sum of costs:    {}".format(get_sum_of_cost(result)))
-        print(result)
-        return result
+        if print_results:
+            print("\n Found a solution! \n")
+            print("CPU time (s):    {:.2f}".format(self.CPU_time))
+            print("Sum of costs:    {}".format(get_sum_of_cost(result)))
+            print(result)
+
+        if return_costs:
+            return result, get_sum_of_cost(result), self.CPU_time
+        else:
+            return result

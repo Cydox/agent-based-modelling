@@ -141,7 +141,7 @@ class CBSSolver(object):
         self.num_of_expanded += 1
         return node
 
-    def find_solution(self, disjoint=True):
+    def find_solution(self, disjoint=True, print_results=True, return_costs=False):
         """ Finds paths for all agents from their start locations to their goal locations
 
         disjoint    - use disjoint splitting or not
@@ -175,8 +175,12 @@ class CBSSolver(object):
             parent = self.pop_node()
 
             if len(parent['collisions']) == 0:
-                self.print_results(parent)
-                return parent['paths']
+                if print_results:
+                    self.print_results(parent)
+                if return_costs:
+                    return parent['paths'], get_sum_of_cost(parent['paths']), timer.time() - self.start_time
+                else:
+                    return parent['paths']
 
             collision = parent['collisions'][0]
             constraints = standard_splitting(collision)
@@ -216,7 +220,7 @@ class CBSSolver(object):
             #                standard_splitting function). Add a new child node to your open list for each constraint
             #           Ensure to create a copy of any objects that your child nodes might inherit
 
-        return root['paths']
+        return root['paths'],
 
     def print_results(self, node):
         print("\n Found a solution! \n")
