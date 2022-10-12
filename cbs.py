@@ -2,6 +2,9 @@ import itertools
 import time as timer
 import heapq
 import random
+
+import numpy as np
+
 from single_agent_planner import compute_heuristics, a_star, get_location, get_sum_of_cost
 from copy import deepcopy
 
@@ -171,8 +174,14 @@ class CBSSolver(object):
         root['collisions'] = detect_collisions(root['paths'])
         self.push_node(root)
 
+        self.node_num = 0
+
         while len(self.open_list) > 0:
             parent = self.pop_node()
+
+            if self.node_num % 1000:
+                if timer.time() - self.start_time > 10:
+                    return None, np.nan, timer.time() - self.start_time
 
             if len(parent['collisions']) == 0:
                 if print_results:
@@ -201,6 +210,7 @@ class CBSSolver(object):
                     agent,
                     child['constraints']
                 )
+                self.node_num += 1
 
                 if path is None:
                     continue
