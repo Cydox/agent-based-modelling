@@ -5,6 +5,7 @@ python3 \
 python3-matplotlib \
 python3-numpy \
 python3-pandas \
+vim \
 && rm -rf /var/lib/apt/lists/*
 
 COPY ./**.py /app/
