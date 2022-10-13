@@ -79,7 +79,7 @@ class Orchestrator:
         self.planner = planner
 
         self.num_agents = num_agents
-        self.agent_groups = start_groups.keys()
+        self.agent_groups = list(start_groups.keys())
 
         # format start and goal groups as dictionaries of arrays instead of lists
         # this is necessary to let np.random.choice work properly later on

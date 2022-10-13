@@ -1,7 +1,7 @@
 import itertools
 
 def create_file_instances(filename, group_sizes):
-    new_filename = filename.split('/')[0] + '/assignments/ ' + filename.split('/')[1].split('.')[0] + '_'
+    new_filename = filename.split('/')[0] + '/assignments/' + filename.split('/')[1].split('.')[0] + '_'
     file = open(filename, 'r')
     lines = file.readlines()
 
@@ -33,4 +33,6 @@ def create_file_instances(filename, group_sizes):
         new_file.writelines(new_lines)
         new_file.close()
 
-create_file_instances('instances/assignment_lvl_1.txt', {'a1': (1, 10), 'a2': (1, 10)})
+create_file_instances('instances/assignment_lvl_1.txt', {'a1': (1, 5), 'a2': (1, 5)})
+create_file_instances('instances/assignment_lvl_2.txt', {'a1': (1, 5), 'a2': (1, 5)})
+create_file_instances('instances/assignment_lvl_3.txt', {'a1': (1, 5), 'a2': (1, 5)})
