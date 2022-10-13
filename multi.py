@@ -53,6 +53,9 @@ def worker(q_cases, q_results):
 
 def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, iterator: case_iterator, n_initial, n_workers):
     
+    total_queued = 0
+    total_results = 0
+
     results = []
 
     for i in range(n_initial):
@@ -60,16 +63,20 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         print(f'adding case {c.parameter}')
         q_cases.put(c)
 
+    total_queued = total_queued + n_initial
+
 
     sum = 0
 
     for i in range(n_initial - n_workers):
         result = q_results.get()
+        total_results = total_results + 1
         results.append(result)
 
         sum = sum + result.result
 
     result = q_results.get()
+    total_results = total_results + 1
     results.append(result)
 
     sum = sum + result.result
@@ -79,13 +86,26 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         c = iterator.__next__()
         print(f'adding case {c.parameter}')
         q_cases.put(c)
+        total_queued = total_queued + 1
 
         result = q_results.get()
+        total_results = total_results + 1
         results.append(result)
 
         sum = sum + result.result
 
+    while total_queued > total_results:
+
+        result = q_results.get()
+        total_results = total_results + 1
+        results.append(result)
+
+        sum = sum + result.result
+
+
     print('done... ')
+    print (total_queued)
+    print (total_results)
     # print(results)
 
     
