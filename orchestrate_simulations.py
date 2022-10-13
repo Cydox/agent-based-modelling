@@ -35,7 +35,7 @@ class Orchestrator:
 
         # for every kpi, add 4 columns in the results table: kpi, kpi_mean, kpi_std, kpi_var
         col_names = ['starts', 'goals'] + list(
-            itertools.chain(*[[kpi+'_var', kpi+'_mean', kpi+'_std'] for kpi in self.simulations_kpis])
+            itertools.chain(*[[kpi, kpi+'_var', kpi+'_mean', kpi+'_std'] for kpi in self.simulations_kpis])
         )
         self.simulation_results = pd.DataFrame(
             columns=col_names
@@ -73,8 +73,8 @@ class Orchestrator:
             raise RuntimeError("Unknown solver!")
 
         # Already store the KPI results in the results table
-        self.simulation_results.loc[self.simulation_id, self.simulations_kpis[0]] = total_cost
-        self.simulation_results.loc[self.simulation_id, self.simulations_kpis[1]] = total_computation_time
+        # self.simulation_results.loc[self.simulation_id, self.simulations_kpis[0]] = total_cost
+        # self.simulation_results.loc[self.simulation_id, self.simulations_kpis[1]] = total_computation_time
 
         # Build the dictionary that will eventually be the new row in the results table
         simulation_results = {
@@ -86,9 +86,7 @@ class Orchestrator:
 
         # Now for each KPI, store mean, std and variation coefficient in the dictionary as well
         for kpi in self.simulations_kpis:
-            simulation_results[kpi+'_mean'] = self.simulation_results[kpi].mean()
-            simulation_results[kpi+'_std'] = self.simulation_results[kpi].std()
-
+            simulation_results[kpi+'_mean'] = np.append(self.simulation_results[kpi].to_numpy(), simulation_results[kpi]).mean()
             # Coefficient of variation in percentage:
             simulation_results[kpi+'_var'] = simulation_results[kpi+'_std'] / simulation_results[kpi+'_mean'] * 100
 
@@ -151,13 +149,12 @@ class Orchestrator:
             return next_input
 
     def save_results(self):
-
         """"Stores the results of the simulations in a .csv file and a plot figure. """
 
         file_name = f'{" ".join([str(agent_group) + "-" +  str(self.num_agents[agent_group]) for agent_group in self.agent_groups])} results'
 
         # save the table with results
-        self.simulation_results.sort_index(inplace=True)
+        self.simulation_results.reset_index(inplace=True)
         self.simulation_results.to_csv(f'simulation_results/{file_name}.csv')
 
         # save the plot
@@ -179,5 +176,4 @@ class Orchestrator:
         plt.savefig(f'simulation_results/{file_name}.png',
                     dpi=100)
         plt.close()
-
 
