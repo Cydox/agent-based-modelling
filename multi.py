@@ -91,26 +91,26 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     
 
 
+if __name__ == "__main__":
+
+    n_workers = 2
+    n_initial = 10
+
+    q_cases = multiprocessing.Queue()
+    q_results = multiprocessing.Queue()
 
 
-n_workers = 2
-n_initial = 10
+    workers = [multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False) for w in range(n_workers)]
+    # worker = multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False)
+    it = case_iterator()
+    gen = multiprocessing.Process(target=generator, args=(q_cases, q_results, it, n_initial, n_workers), daemon=False)
 
-q_cases = multiprocessing.Queue()
-q_results = multiprocessing.Queue()
+    # worker.start()
+    [w.start() for w in workers]
 
-
-workers = [multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False) for w in range(n_workers)]
-# worker = multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False)
-it = case_iterator()
-gen = multiprocessing.Process(target=generator, args=(q_cases, q_results, it, n_initial, n_workers), daemon=False)
-
-# worker.start()
-[w.start() for w in workers]
-
-gen.start()
-print('join')
-gen.join()
-print('joined')
-# worker.kill()
-[w.kill() for w in workers]
+    gen.start()
+    print('join')
+    gen.join()
+    print('joined')
+    # worker.kill()
+    [w.kill() for w in workers]
