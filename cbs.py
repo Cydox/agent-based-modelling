@@ -179,10 +179,6 @@ class CBSSolver(object):
         while len(self.open_list) > 0:
             parent = self.pop_node()
 
-            if self.node_num % 1000:
-                if timer.time() - self.start_time > 10:
-                    return None, np.nan, timer.time() - self.start_time
-
             if len(parent['collisions']) == 0:
                 if print_results:
                     self.print_results(parent)

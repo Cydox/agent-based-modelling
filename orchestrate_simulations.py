@@ -27,12 +27,22 @@ class Orchestrator:
         :param planner: planner type used in the simulations
         """
 
+        self.simulations_kpis = ['Cost', 'Computation time']
+
+        # Required slope for the trend line through the each kpi's variation coefficient in order to stop running new
+        # simulations:
+        self.slope_threshold = 0.001
+
+        # for every kpi, add 4 columns in the results table: kpi, kpi_mean, kpi_std, kpi_var
+        col_names = ['starts', 'goals'] + list(
+            itertools.chain(*[[kpi+'_var', kpi+'_mean', kpi+'_std'] for kpi in self.simulations_kpis])
+        )
         self.simulation_results = pd.DataFrame(
-            columns=['cost', 'computation_time', 'current_simulation_avg', 'current_simulation_std_dev', 'variation_coefficient']
+            columns=col_names
         )
         self.simulation_results.index.name = 'simulation'
-        self.simulation_inputs = []
 
+        self.simulation_inputs = []
         self.simulation_id = 0
 
         self.map = map
@@ -45,14 +55,6 @@ class Orchestrator:
         # this is necessary to let np.random.choice work properly later on
         self.start_groups = {start_group: np.array(start_groups[start_group]) for start_group in start_groups}
         self.goal_groups = {goal_group: np.array(goal_groups[goal_group]) for goal_group in goal_groups}
-
-        # # All the possible routes that 1 agent from a certain group can take:
-        # # (store as dictionary containing arrays of cartesian product of all starts and goals)
-        # self.agent_routes = {
-        #     agent_group: np.array([
-        #         route for route in itertools.product(start_groups[agent_group], goal_groups[agent_group])
-        #     ]) for agent_group in self.agent_groups
-        # }
 
     def run(self, input):
         starts = input['starts']
@@ -70,19 +72,27 @@ class Orchestrator:
         else:
             raise RuntimeError("Unknown solver!")
 
-        self.simulation_results.loc[self.simulation_id, 'cost'] = total_cost
+        # Already store the KPI results in the results table
+        self.simulation_results.loc[self.simulation_id, self.simulations_kpis[0]] = total_cost
+        self.simulation_results.loc[self.simulation_id, self.simulations_kpis[1]] = total_computation_time
 
-        mean = self.simulation_results['cost'].mean()
-        std_dev = self.simulation_results['cost'].std()
-
+        # Build the dictionary that will eventually be the new row in the results table
         simulation_results = {
-            'cost': total_cost,
-            'computation_time': total_computation_time,
-            'current_simulation_avg': mean,
-            'current_simulation_std_dev': std_dev,
-            'variation_coefficient':  std_dev / mean,
+            self.simulations_kpis[0]: total_cost,
+            self.simulations_kpis[1]: total_computation_time,
+            'starts': str(starts),
+            'goals': str(goals)
         }
 
+        # Now for each KPI, store mean, std and variation coefficient in the dictionary as well
+        for kpi in self.simulations_kpis:
+            simulation_results[kpi+'_mean'] = self.simulation_results[kpi].mean()
+            simulation_results[kpi+'_std'] = self.simulation_results[kpi].std()
+
+            # Coefficient of variation in percentage:
+            simulation_results[kpi+'_var'] = simulation_results[kpi+'_std'] / simulation_results[kpi+'_mean'] * 100
+
+        # Store the results of this exact simulation as a ro win the results table.
         self.simulation_results.loc[self.simulation_id] = pd.Series(simulation_results)
 
     def _is_stable(self):
@@ -91,17 +101,23 @@ class Orchestrator:
 
         Mathematically, that means that the linear regressor through the last n rows should have a slope of almost 0
         """
-        n = 20
+        n = 50
 
-        if len(self.simulation_inputs) >= 40:
-            regressor = scipy.stats.linregress(x=self.simulation_results.index.to_list()[-n:],
-                                               y=self.simulation_results['variation_coefficient'].to_list()[-n:])
+        if len(self.simulation_inputs) >= n:
+            slopes = []
+            for kpi in self.simulations_kpis:
+                regressor = scipy.stats.linregress(x=self.simulation_results.index.to_list()[-n:],
+                                                   y=self.simulation_results[kpi+'_var'].to_list()[-n:])
+                slopes.append(regressor.slope)
 
-            if self.simulation_id % 20 == 0:
+            if self.simulation_id % 25 == 0:
                 print(f'Simulating {self.simulation_id}th run for agents {self.num_agents}')
-                print(f' - current slope of coefficient of variation = {regressor.slope:.5f}')
+                print(f' - current slope of coefficient of variation = {[round(slope, 5) for slope in slopes]}')
 
-            if -0.0005 < regressor.slope < 0.0005:
+            # If all slopes fall within threshold:
+            if len(
+                    [slope for slope in slopes if -self.slope_threshold < slope < self.slope_threshold]
+                   ) == len(self.simulations_kpis):
                 return True
 
         return False
@@ -113,8 +129,6 @@ class Orchestrator:
         if self._is_stable():
             raise StopIteration
         else:
-            # i = 0
-            # while i < 100:
             starts = []
             goals = []
 
@@ -132,15 +146,9 @@ class Orchestrator:
                 'goals': goals
             }
 
-            # if next_input not in self.simulation_inputs:
             self.simulation_inputs.append(next_input)
             self.simulation_id += 1
             return next_input
-
-            #     else:
-            #         i += 1
-            #
-            # raise BaseException('error generating next unique input')
 
     def save_results(self):
 
@@ -149,14 +157,20 @@ class Orchestrator:
         file_name = f'{" ".join([str(agent_group) + "-" +  str(self.num_agents[agent_group]) for agent_group in self.agent_groups])} results'
 
         # save the table with results
+        self.simulation_results.sort_index(inplace=True)
         self.simulation_results.to_csv(f'simulation_results/{file_name}.csv')
 
         # save the plot
         plt.figure()
-        plt.plot(self.simulation_results['variation_coefficient'], label='Coefficient of variation')
+
+        for kpi in self.simulations_kpis:
+            plt.plot(self.simulation_results[kpi+'_var'], label=kpi)
+
         plt.xlabel('Number of simulations')
-        plt.ylabel('Coefficient of variation')
-        plt.title(f'Simulatied {", ".join(str(val) for val in self.num_agents.values())} agents. Avg cost: {self.simulation_results["cost"].mean():.2f}')
+        plt.ylabel('Coefficient of variation [%]')
+        plt.suptitle(f'Simulated {", ".join(str(val) for val in self.num_agents.values())} agents.')
+        plt.title(f'Avg cost: {self.simulation_results[self.simulations_kpis[0]].mean():.2f} - '
+                  f'Avg computation time {self.simulation_results[self.simulations_kpis[-1]].mean():.2f}')
         plt.legend()
         fig = plt.gcf()
         fig.set_size_inches(18.5, 10.5)
