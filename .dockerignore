@@ -1,0 +1,5 @@
+**
+!**/*.py
+!instances
+!./instances/**.txt
+
