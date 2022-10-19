@@ -54,7 +54,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         q_cases.put(c)
         total_queued = total_queued + 1
 
-        result = q_results.get(timeout=60*30)
+        result = q_results.get()
  
 
         iterator.store_result(result)
