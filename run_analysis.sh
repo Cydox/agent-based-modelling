@@ -6,7 +6,7 @@ do
   then
     filename="${f%.*}"
     echo $filename
-    sudo podman run -itd --name $(basename $filename) agent-based python3 --instance /app/$filename --solver CBS
+    sudo podman run -itd --name $(basename $filename) agent-based python3 /app/run_orchestrator_multi.py --instance /app/$filename.txt --solver CBS
   else
     echo "Warning: Some problem with \"$f\""
   fi
