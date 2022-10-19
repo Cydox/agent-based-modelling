@@ -1,5 +1,7 @@
 **
 !**/*.py
 !instances
+!instances/assignments
 !./instances/**.txt
+!./instances/assignments/**.txt
 

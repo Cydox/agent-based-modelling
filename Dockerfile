@@ -5,9 +5,12 @@ python3 \
 python3-matplotlib \
 python3-numpy \
 python3-pandas \
+python3-scipy \
 vim \
 && rm -rf /var/lib/apt/lists/*
 
 COPY ./**.py /app/
-COPY ./instances/**.txt /app/instances/
+COPY ./instances /app/instances
+RUN mkdir -p /app/simulation_results/
+WORKDIR /app/
 
