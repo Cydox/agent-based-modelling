@@ -3,6 +3,7 @@ import argparse
 import glob
 import itertools
 import multiprocessing
+import queue
 import numpy as np
 
 from orchestrate_simulations import Orchestrator, Case
@@ -53,7 +54,9 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         q_cases.put(c)
         total_queued = total_queued + 1
 
-        result = q_results.get()
+        result = q_results.get(timeout=60*30)
+ 
+
         iterator.store_result(result)
         total_results = total_results + 1
 
@@ -61,7 +64,11 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
 
     while total_queued > total_results:
 
-        result = q_results.get()
+        try:
+            result = q_results.get(timeout=60*30)
+        except queue.Empty:
+            break
+        
         iterator.store_result(result)
         total_results = total_results + 1
 
