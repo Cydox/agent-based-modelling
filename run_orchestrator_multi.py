@@ -116,7 +116,7 @@ if __name__ == '__main__':
 
 
 
-            n_workers = 4
+            n_workers = 8
             n_initial = 10
 
             q_cases = multiprocessing.Queue()
