@@ -68,9 +68,6 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     
     test = 0
     for c in iterator:
-        test += 1
-        if test == 10:
-            break
         q_cases.put(c)
         case_set.add(case_to_tuple(c[0]))
         total_queued = total_queued + 1
