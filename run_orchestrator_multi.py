@@ -80,12 +80,15 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         total_results = total_results + 1
 
 
-
+    print('decided to stop, let remaining workers finish')
     while total_queued > total_results:
+
+        print(f'waiting for {total_queued - total_results} workers to finish')
 
         try:
             result = q_results.get(timeout=30*60)
         except queue.Empty:
+            print('aborting remaining cases')
             break
         
         iterator.store_result(result)
