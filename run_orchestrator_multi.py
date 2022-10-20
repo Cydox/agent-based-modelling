@@ -10,7 +10,19 @@ from orchestrate_simulations import Orchestrator, Case
 from library_open_simulation_config import *
 SOLVER = "CBS"
 
+def save_unfinished(case_set: set):
+    f = open('./simulation_results/aborted.txt', 'w')
 
+    for case in case_set:
+        f.write(case_from_tuple(case).__repr__() + "\n")
+
+    f.close()
+
+def case_to_tuple(case):
+    return (tuple(case['starts']), tuple(case['goals']))
+
+def case_from_tuple(t):
+    return {'starts': list(t[0]), 'goals': list(t[1])}
 
 def worker(q_cases, q_results):
     while True:
@@ -25,11 +37,14 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     total_queued = 0
     total_results = 0
 
+    case_set = set()
+
     results = []
 
     for i in range(n_initial):
         c = iterator.__next__()
         q_cases.put(c)
+        case_set.add(case_to_tuple(c[0]))
 
     total_queued = total_queued + n_initial
 
@@ -39,25 +54,32 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     for i in range(n_initial - n_workers):
         result = q_results.get()
         iterator.store_result(result)
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
         total_results = total_results + 1
 
 
 
     result = q_results.get()
     iterator.store_result(result)
+    case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
     total_results = total_results + 1
 
 
     
-
+    test = 0
     for c in iterator:
+        test += 1
+        if test == 10:
+            break
         q_cases.put(c)
+        case_set.add(case_to_tuple(c[0]))
         total_queued = total_queued + 1
 
         result = q_results.get()
  
 
         iterator.store_result(result)
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
         total_results = total_results + 1
 
 
@@ -65,11 +87,12 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     while total_queued > total_results:
 
         try:
-            result = q_results.get(timeout=60*30)
+            result = q_results.get(timeout=30*60)
         except queue.Empty:
             break
         
         iterator.store_result(result)
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
         total_results = total_results + 1
 
 
@@ -78,6 +101,9 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     print('done... ')
     print (total_queued)
     print (total_results)
+    print(len(case_set))
+
+    save_unfinished(case_set)
 
     iterator.save_results()
 
