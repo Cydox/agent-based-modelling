@@ -1,6 +1,5 @@
 import itertools
-from re import I
-import statistics
+import os
 
 import scipy.stats
 
@@ -8,9 +7,7 @@ from cbs import CBSSolver
 from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
 from distributed import DistributedPlanningSolver  # Placeholder for Distributed Planning
-from visualize import Animation
 
-from single_agent_planner import get_sum_of_cost
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,6 +15,7 @@ import matplotlib.pyplot as plt
 
 class Case:
     def __init__(self, input, planner, map, sim_id):
+        """"Initiates a Case instance. Used to run one certain simulation with a planner, map, and agent input."""
         self.input = input
         self.planner = planner
         self.map = map
@@ -38,12 +36,12 @@ class Case:
         # elif self.planner == "Distributed":
         #     solver = DistributedPlanningSolver(self.map, starts, goals)
         #     paths = solver.find_solution()
+
         else:
             raise RuntimeError("Unknown solver!")
 
-        return (total_cost, total_computation_time, starts, goals, self.sim_id)
+        return total_cost, total_computation_time, starts, goals, self.sim_id
 
-        
 
 class Orchestrator:
     def __init__(self, map, num_agents: dict, start_groups: dict, goal_groups: dict, planner):
@@ -80,6 +78,8 @@ class Orchestrator:
 
         self.num_agents = num_agents
         self.agent_groups = list(start_groups.keys())
+        self.file_name = \
+            f'{" ".join([str(agent_group) + "-" + str(self.num_agents[agent_group]) for agent_group in self.agent_groups])} results'
 
         # format start and goal groups as dictionaries of arrays instead of lists
         # this is necessary to let np.random.choice work properly later on
@@ -89,10 +89,6 @@ class Orchestrator:
     def store_result(self, results):
 
         (total_cost, total_computation_time, starts, goals, sim_id) = results
-
-        # # Already store the KPI results in the results table
-        # self.simulation_results.loc[sim_id, self.simulations_kpis[0]] = total_cost
-        # self.simulation_results.loc[sim_id, self.simulations_kpis[1]] = total_computation_time
 
         # Build the dictionary that will eventually be the new row in the results table
         simulation_results = {
@@ -104,20 +100,17 @@ class Orchestrator:
 
         # Now for each KPI, store mean, std and variation coefficient in the dictionary as well
         for kpi in self.simulations_kpis:
-
-            
-            simulation_results[kpi+'_mean'] = np.append(self.simulation_results[kpi].to_numpy(), simulation_results[kpi]).mean()
-            simulation_results[kpi+'_std'] = np.append(self.simulation_results[kpi].to_numpy(), simulation_results[kpi]).std()
+            simulation_results[kpi+'_mean'] = np.append(self.simulation_results[kpi].to_numpy(),
+                                                        simulation_results[kpi]).mean()
+            simulation_results[kpi+'_std'] = np.append(self.simulation_results[kpi].to_numpy(),
+                                                       simulation_results[kpi]).std()
 
             # Coefficient of variation in percentage:
             simulation_results[kpi+'_var'] = simulation_results[kpi+'_std'] / simulation_results[kpi+'_mean'] * 100
 
         # Store the results of this exact simulation as a ro win the results table.
-        self.simulation_results = pd.concat([self.simulation_results, pd.Series(simulation_results).to_frame().T], ignore_index=True)
-        
-        # self.simulation_results.loc[sim_id] = pd.Series(simulation_results)
-
-
+        self.simulation_results = pd.concat([self.simulation_results, pd.Series(simulation_results).to_frame().T],
+                                            ignore_index=True)
 
     def _is_stable(self):
         """" Checks if the results are stabilizing. If there have been 100 simulations and the variation coefficient
@@ -130,13 +123,25 @@ class Orchestrator:
         if self.simulation_results.shape[0] >= n:
             slopes = []
             for kpi in self.simulations_kpis:
-                regressor = scipy.stats.linregress(x=self.simulation_results.index.to_list()[-n:],
-                                                   y=self.simulation_results[kpi+'_var'].to_list()[-n:])
+                m = round(len(self.simulation_results) * 0.25)
+
+                regressor = scipy.stats.linregress(x=self.simulation_results.index.to_list()[-m:],
+                                                   y=self.simulation_results[kpi+'_var'].to_list()[-m:])
                 slopes.append(regressor.slope)
 
             if self.simulation_id % 25 == 0:
                 print(f'Simulating {self.simulation_id}th run for agents {self.num_agents}')
                 print(f' - current slope of coefficient of variation = {[round(slope, 5) for slope in slopes]}')
+
+                # save intermediate results to a csv
+                try:
+                    self.simulation_results.to_csv(f'simulation_results/{self.file_name}.csv.new', index=False)
+
+                    os.rename(f'simulation_results/{self.file_name}.csv.new',
+                              f'simulation_results/{self.file_name}.csv')
+                except Exception as x:
+                    print(f'Could not save intermediate results for due to: {x}')
+                    pass
 
             # If all slopes fall within threshold:
             if len(
@@ -175,15 +180,11 @@ class Orchestrator:
             return next_input, self.planner, self.map, self.simulation_id
 
     def save_results(self):
-
         """"Stores the results of the simulations in a .csv file and a plot figure. """
-
-        file_name = f'{" ".join([str(agent_group) + "-" +  str(self.num_agents[agent_group]) for agent_group in self.agent_groups])} results'
-
         # save the table with results
         # self.simulation_results.sort_index(inplace=True)
         self.simulation_results.reset_index(inplace=True)
-        self.simulation_results.to_csv(f'simulation_results/{file_name}.csv')
+        self.simulation_results.to_csv(f'simulation_results/{self.file_name}_final.csv', index=False)
 
         # save the plot
         plt.figure()
@@ -201,7 +202,7 @@ class Orchestrator:
         fig.set_size_inches(18.5, 10.5)
         # plt.show()
 
-        plt.savefig(f'simulation_results/{file_name}.png',
+        plt.savefig(f'simulation_results/{self.file_name}.png',
                     dpi=100)
         plt.close()
 

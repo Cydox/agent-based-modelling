@@ -181,7 +181,7 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     while len(open_list) > 0:
         curr = pop_node(open_list)
 
-        if curr['g_val'] > 10 * root['h_val']:
+        if curr['g_val'] > 2 * root['h_val'] + 10:
             # if g_val exceeds root's h_val by a lot, the path cannot be found and the code should stop.
             break
 

@@ -137,17 +137,11 @@ if __name__ == '__main__':
                 planner=args.solver
             )
 
-            # for i in simulation_orchestrator:  # TODO: implement multi threading
-            #     simulation_orchestrator.run(i)
-
-
-
-            n_workers = 8
-            n_initial = 10
+            n_workers = 4
+            n_initial = 200
 
             q_cases = multiprocessing.Queue()
             q_results = multiprocessing.Queue()
-
 
             workers = [multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False) for w in range(n_workers)]
             # worker = multiprocessing.Process(target=worker, args=(q_cases, q_results,), daemon=False)

@@ -1,4 +1,7 @@
 import time as timer
+
+import numpy as np
+
 from single_agent_planner import compute_heuristics, a_star, get_sum_of_cost
 
 
@@ -34,7 +37,7 @@ class PrioritizedPlanningSolver(object):
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, constraints)
             if path is None:
-                raise BaseException('No solutions')
+                return [], np.nan, timer.time() - start_time
             result.append(path)
 
             for agent in range(self.num_of_agents):
@@ -71,7 +74,6 @@ class PrioritizedPlanningSolver(object):
             print("\n Found a solution! \n")
             print("CPU time (s):    {:.2f}".format(self.CPU_time))
             print("Sum of costs:    {}".format(get_sum_of_cost(result)))
-            print(result)
 
         if return_costs:
             return result, get_sum_of_cost(result), self.CPU_time
