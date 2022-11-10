@@ -28,17 +28,15 @@ class Case:
         goals = input['goals']
 
         if self.planner == "CBS":
-            cbs = CBSSolver(self.map, starts, goals)
-            paths, total_cost, total_computation_time = cbs.find_solution(print_results=False, return_costs=True)
+            solver = CBSSolver(self.map, starts, goals)
         elif self.planner == "Prioritized":
             solver = PrioritizedPlanningSolver(self.map, starts, goals)
-            paths, total_cost, total_computation_time = solver.find_solution(print_results=False, return_costs=True)
-        # elif self.planner == "Distributed":
-        #     solver = DistributedPlanningSolver(self.map, starts, goals)
-        #     paths = solver.find_solution()
-
+        elif self.planner == "Distributed":
+            solver = DistributedPlanningSolver(self.map, starts, goals)
         else:
             raise RuntimeError("Unknown solver!")
+
+        paths, total_cost, total_computation_time = solver.find_solution(print_results=False, return_costs=True)
 
         return total_cost, total_computation_time, starts, goals, self.sim_id
 
