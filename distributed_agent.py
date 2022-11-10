@@ -46,13 +46,13 @@ class AgentDistributed(object):
         
     def __detect_collision(self, n) -> tuple:
         try:
-            collision = detect_collision(self.plan, n.plan)
+            collision = detect_collision([self.location] + self.plan, [n.location] + n.plan)
             # detect_collision returns col_loc and time to collision. Time is currently one to low, but is no problem
         except IndexError:
             try:
-                collision = detect_collision(self.plan, n.path_history)
+                collision = detect_collision([self.location] + self.plan, n.path_history)
             except IndexError:
-                collision = detect_collision(self.path_history, n.plan)
+                collision = detect_collision(self.path_history, [n.location] + n.plan)
         return collision
 
     def __resolve_conflict(self, n, col_loc, col_time):
@@ -60,9 +60,6 @@ class AgentDistributed(object):
 
         # option 1: replan own plan
         constraints = self.__generate_constraints(other_agents | {n})
-        #
-        # vertex_constraints = [constraint['loc'] for constraint in constraints if type(constraint['loc']) is tuple]
-        # print_mapf_instance(self.my_map, starts=vertex_constraints[:10], goals=vertex_constraints)
         resolution_1 = self.__a_star(constraints, self.location)
 
         # option 2: replan other agent's plan

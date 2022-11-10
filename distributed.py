@@ -13,7 +13,7 @@ class DistributedPlanningSolver(object):
         starts      - [(x1, y1), (x2, y2), ...] list of start locations
         goals       - [(x1, y1), (x2, y2), ...] list of goal locations
         """
-        self.dist_threshold = 3  # the radius of any agent's local radar (in cell lengths)
+        self.dist_threshold = 4  # the radius of any agent's local radar (in cell lengths)
 
         self.my_map = my_map
 
@@ -67,7 +67,7 @@ class DistributedPlanningSolver(object):
         # Set neighbors of all agents (implementation of local radar)
         for agent in self.agents:
             neighbors = [neighbor for neighbor in self.agents
-                         if neighbor != agent and self._distance(neighbor, agent) < self.dist_threshold]
+                         if neighbor != agent and self._distance(neighbor, agent) <= self.dist_threshold]
 
             agent.set_neighbors(neighbors=neighbors)
 
