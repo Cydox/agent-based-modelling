@@ -80,6 +80,7 @@ class AgentDistributed(object):
 
     def time_step(self):
         self.path_history.append(self.plan[0])
+        self.location = self.plan[0]
         self.plan = self.plan[1:]
 
     def set_neighbors(self, neighbors):
@@ -99,15 +100,32 @@ class AgentDistributed(object):
 
         # option 1: replan own plan
         constraints = self.__generate_constraints(other_agents + [n])
-        resolution_1 = self.__a_star(constraints)
+        resolution_1 = self.__a_star(constraints, self.location)
 
 
         # option 2: replan other agent's plan
         constraints = self.__generate_constraints(other_agents + [self])
-        resolution_2 = n.__a_star(constraints)
+        resolution_2 = n.__a_star(constraints, self.location)
+
+        # no solution found
+        if resolution_1 is None and resolution_2 is None:
+            raise Exception
 
         # evaluate which resolution option is preferable
+        if resolution_1 is None:
+            cost_1 = float('inf')
+        else:
+            cost_1 = len(resolution_1) - len(self.plan)
 
+        if resolution_2 is None:
+            cost_2 = float('inf')
+        else:
+            cost_2 = len(resolution_2) - len(n.plan)
+
+        if cost_1 < cost_2:
+            self.plan = resolution_1
+        else:
+            n.plan = resolution_2
 
 
     def __generate_constraints(agent_list):
@@ -117,7 +135,9 @@ class AgentDistributed(object):
         self.plan = self.__a_star([])
         self.planned_cost = len(self.plan)
 
-    def __a_star(self, constraints):
-        return a_star(self.my_map, self.start, self.goal, self.heuristics, 0, constraints=constraints)
+    def __a_star(self, constraints, start=None):
+        if start is None:
+            start = self.start
+        return a_star(self.my_map, start, self.goal, self.heuristics, 0, constraints=constraints)
 
 
