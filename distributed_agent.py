@@ -14,7 +14,7 @@ from cbs import detect_collision, get_location
 class AgentDistributed(object):
     """Aircraft object to be used in the distributed planner."""
 
-    def __init__(self, environment, my_map, start, goal, heuristics):
+    def __init__(self, my_map, start, goal, heuristics):
         """
         my_map   - list of lists specifying obstacle positions
         starts      - (x1, y1) start location
