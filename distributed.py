@@ -21,7 +21,7 @@ class DistributedPlanningSolver(object):
         self.agents = [AgentDistributed(start=start,
                                         goal=goal,
                                         heuristics=compute_heuristics(my_map=my_map, goal=goal),
-                                        my_map=my_map,
+                                        my_map=my_map
                                         ) for start, goal in zip(starts, goals)]
 
         self.solved = False
@@ -78,9 +78,9 @@ class DistributedPlanningSolver(object):
         # With every plan made, execute plans for one timestep.
         # (this is not combined with previous for-loop since all agents must make their plan at the same time.
         for agent in self.agents:
-            agent.timestep()
+            agent.time_step()
 
-        self.solved = all([agent.goal == agent.location for agent in self.agents])  # if all agents at goal loc: solved.
+        self.solved = all([len(agent.plan) == 0 for agent in self.agents])  # if all agents at goal loc: solved.
 
     @staticmethod
     def _distance(agent1, agent2) -> float:

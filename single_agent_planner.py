@@ -111,6 +111,9 @@ def is_constrained(curr_loc: tuple, next_loc: tuple, next_time: int, constraint_
     #               any given constraint. For efficiency the constraints are indexed in a constraint_table
     #               by time step, see build_constraint_table.
 
+    # Edge constraints are defined as:
+    #   not allowed to be at constraint['loc'][1] at time step constraint['time'] coming from constraint['loc'][0]
+
     try:
         for constraint in constraint_table[next_time]:  # loop through all constraints active for the next_time
             if constraint['loc'] == next_loc or constraint['loc'] == [curr_loc, next_loc]:

@@ -157,7 +157,7 @@ if __name__ == '__main__':
         # if not args.batch:
         print("***Test paths on a simulation***")
         animation = Animation(my_map, starts, goals, paths)
-        # animation.save("output.mp4", 1.0) # install ffmpeg package to use this option
+        # animation.save("output.mp4", 1.0)  # install ffmpeg package to use this option
         animation.show()
 
     result_file.close()

@@ -1,15 +1,6 @@
-"""
-This file contains the AgentDistributed class that can be used to implement individual planning.
-
-Code in this file is just provided as guidance, you are free to deviate from it.
-"""
-
 from single_agent_planner import a_star
 from cbs import detect_collision, get_location
-
-
-
-
+# from run_experiments import print_mapf_instance
 
 class AgentDistributed(object):
     """Aircraft object to be used in the distributed planner."""
@@ -27,18 +18,22 @@ class AgentDistributed(object):
         self.goal = goal
         self.heuristics = heuristics
 
-        self.plan = []
-        self.path_history = []
+        self.path_history = [start]
         self.location = start
-        self.planned_cost = 0
         self.start = start
         self.goal = goal
         self.neighbors = []
 
+        self.plan = self.__a_star([])
+        self.planned_cost = len(self.plan)
+
     def time_step(self):
-        self.path_history.append(self.plan[0])
-        self.location = self.plan[0]
-        self.plan = self.plan[1:]
+        try:
+            self.path_history.append(self.plan[0])
+            self.location = self.plan[0]
+            self.plan = self.plan[1:]
+        except IndexError:
+            self.path_history.append(self.location)
 
     def set_neighbors(self, neighbors):
         self.neighbors = neighbors
@@ -50,19 +45,29 @@ class AgentDistributed(object):
                 self.__resolve_conflict(n, col_loc, col_time)
         
     def __detect_collision(self, n) -> tuple:
-       return detect_collision(self.plan, n.plan)
+        try:
+            collision = detect_collision(self.plan, n.plan)
+            # detect_collision returns col_loc and time to collision. Time is currently one to low, but is no problem
+        except IndexError:
+            try:
+                collision = detect_collision(self.plan, n.path_history)
+            except IndexError:
+                collision = detect_collision(self.path_history, n.plan)
+        return collision
 
     def __resolve_conflict(self, n, col_loc, col_time):
-        other_agents = n.neighbors
+        other_agents = (set(n.neighbors) | set(self.neighbors)) - {self} - {n}
 
         # option 1: replan own plan
-        constraints = self.__generate_constraints(other_agents + [n])
+        constraints = self.__generate_constraints(other_agents | {n})
+        #
+        # vertex_constraints = [constraint['loc'] for constraint in constraints if type(constraint['loc']) is tuple]
+        # print_mapf_instance(self.my_map, starts=vertex_constraints[:10], goals=vertex_constraints)
         resolution_1 = self.__a_star(constraints, self.location)
 
-
         # option 2: replan other agent's plan
-        constraints = self.__generate_constraints(other_agents + [self])
-        resolution_2 = n.__a_star(constraints, self.location)
+        constraints = n.__generate_constraints(other_agents | {self})
+        resolution_2 = n.__a_star(constraints, n.location)
 
         # no solution found
         if resolution_1 is None and resolution_2 is None:
@@ -80,9 +85,9 @@ class AgentDistributed(object):
             cost_2 = len(resolution_2) - len(n.plan)
 
         if cost_1 < cost_2:
-            self.plan = resolution_1
+            self.plan = resolution_1[1:]
         else:
-            n.plan = resolution_2
+            n.plan = resolution_2[1:]
 
     def __generate_constraints(self, agent_list) -> list:
         """"
@@ -93,31 +98,36 @@ class AgentDistributed(object):
         constraints = []
 
         for agent in agent_list:
-            for time, loc in enumerate(agent.plan):
+            agent_locations = [agent.location] + agent.plan
+            for pseudo_time, loc in enumerate(agent_locations):
                 constraints.append(  # apply vertex constraints
                     {
-                        'agent': agent,
+                        'agent': self,
                         'loc': loc,
-                        'timestep': time,
+                        'timestep': pseudo_time,
                     }
                 )
                 constraints.append(  # apply edge constraints
                     {
-                        'agent': agent,
-                        'loc': [loc, agent.plan[time - 1]],
-                        'timestep': time
+                        'agent': self,
+                        'loc': [loc, agent_locations[pseudo_time - 1]],
+                        'timestep': pseudo_time
                     }
                 )
+            constraints.append(
+                {
+                    'agent': self,
+                    'loc': agent.goal,
+                    'timestep': -1,
+                    'start_time': len(agent.plan)
+                }
+            )
 
         return constraints
-
-    def __initial_planning(self):
-        self.plan = self.__a_star([])
-        self.planned_cost = len(self.plan)
 
     def __a_star(self, constraints, start=None):
         if start is None:
             start = self.start
-        return a_star(self.my_map, start, self.goal, self.heuristics, 0, constraints=constraints)
+        return a_star(self.my_map, start, self.goal, self.heuristics, self, constraints=constraints)
 
 
