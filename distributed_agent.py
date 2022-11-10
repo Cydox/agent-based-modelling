@@ -108,10 +108,33 @@ class AgentDistributed(object):
 
         # evaluate which resolution option is preferable
 
+    def __generate_constraints(self, agent_list) -> list:
+        """"
+        Returns the constraints based on the planned locations of agents.
 
+        :param agent_list - The agents for which constraints should be generated.
+        """
 
-    def __generate_constraints(agent_list):
-        pass
+        constraints = []
+
+        for agent in agent_list:
+            for time, loc in enumerate(agent.plan):
+                constraints.append(  # apply vertex constraints
+                    {
+                        'agent': agent,
+                        'loc': loc,
+                        'timestep': time,
+                    }
+                )
+                constraints.append(  # apply edge constraints
+                    {
+                        'agent': agent,
+                        'loc': [loc, agent.plan[time - 1]],
+                        'timestep': time
+                    }
+                )
+
+        return constraints
 
     def __initial_planning(self):
         self.plan = self.__a_star([])
