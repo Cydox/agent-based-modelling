@@ -29,7 +29,7 @@ class PrioritizedPlanningSolver(object):
     def find_solution(self, print_results=True, return_costs=False):
         """ Finds paths for all agents from their start locations to their goal locations."""
 
-        start_time = timer.time()
+        start_time = timer.process_time()
         result = []
         constraints = []
 
@@ -68,7 +68,7 @@ class PrioritizedPlanningSolver(object):
                 )
 
 
-        self.CPU_time = timer.time() - start_time
+        self.CPU_time = timer.process_time() - start_time
 
         if print_results:
             print("\n Found a solution! \n")
