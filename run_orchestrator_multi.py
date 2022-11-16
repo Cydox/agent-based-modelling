@@ -36,7 +36,7 @@ import time as timer
 
 def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, iterator: Orchestrator, n_initial, n_workers, min_run_time=300):
 
-    start_time = timer.process_time()
+    start_time = timer.time()
     
     
     
@@ -63,7 +63,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
         total_results = total_results + 1
 
-    while timer.process_time - start_time < min_run_time:
+    while timer.time() - start_time < min_run_time:
 
         result = q_results.get()
  
