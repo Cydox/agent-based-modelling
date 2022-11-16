@@ -85,6 +85,7 @@ class Orchestrator:
         self.goal_groups = {goal_group: np.array(goal_groups[goal_group]) for goal_group in goal_groups}
 
     def store_result(self, results):
+        print(total_cost, total_computation_time)
 
         (total_cost, total_computation_time, starts, goals, sim_id) = results
 
