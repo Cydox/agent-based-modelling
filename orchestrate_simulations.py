@@ -122,9 +122,11 @@ class Orchestrator:
             slopes = []
             for kpi in self.simulations_kpis:
                 m = round(len(self.simulation_results) * 0.25)
-
-                regressor = scipy.stats.linregress(x=self.simulation_results.index.to_list()[-m:],
-                                                   y=self.simulation_results[kpi+'_var'].to_list()[-m:])
+                x=self.simulation_results.index.to_list()[-m:]
+                y=self.simulation_results[kpi+'_var'].to_list()[-m:]
+                mask = ~np.isnan(x) & ~np.isnan(y)
+                regressor = scipy.stats.linregress(x=x[mask],
+                                                   y=y[mask])
                 slopes.append(regressor.slope)
 
             if self.simulation_id % 25 == 0:
