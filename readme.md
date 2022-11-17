@@ -29,11 +29,11 @@ There are two types of instances:
 |`distributed.py`| Contains the `DistributedSolver` class which implements the Distributed planner model. This file actually serves as the 'environment' to the agents.|
 |`distributed_agent.py`| Contains the `AgentDistributed` class which are instantiated in the Distributed planner model. |
 |`library_open_simulation_config.py` |  This file contains functions that load the revised instance type.  |
-|`create_assignment_files.py` |  Not that important. Just a helper function to automatically build the insta nce files.|
+|`create_assignment_files.py` |  Not that important. Just a helper function to automatically build the instance files.|
 
 ### Description of other files: 
 
 | File | Description
 |:----:|------|
-|`orchestrate_simulations.py`  |    Contains the `Case` and `Orchestrator` classes which are being parallelized by `run_orchestrator_multi.py` script to use multi-processing while running multiple cases. |
-|`distributed.py`| Contains the `DistributedSolver` class which implements the Distributed planner model. This file actually serves as the 'environment' to the agents.|
+|`Dockerfile`  |  Creates the container images for the AWS EC2 instance. |
+|`run_analysis.sh`| Starts the different containers |
