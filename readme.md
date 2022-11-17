@@ -1,6 +1,6 @@
-# AE4420-20 Assignment code base
+# AE4422-20 Assignment code base
 
-This is the code base for the assignment for the AE4420-20 coarse in the aerospace engineering master.
+This markdown describes the code base for the assignment for the AE4420-20 coarse in the aerospace engineering master.
 
 Authors: Jan Hendrik Farr and Vince van Deursen
 
