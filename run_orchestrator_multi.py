@@ -19,7 +19,7 @@ def save_unfinished(case_set: set):
     f.close()
 
 def case_to_tuple(case):
-    return (tuple(case['starts']), tuple(case['goals']))
+    return (tuple(case['starts']), tuple(case['goals'], case['id']))
 
 def case_from_tuple(t):
     return {'starts': list(t[0]), 'goals': list(t[1])}
@@ -39,7 +39,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     start_time = timer.time()
     
     
-    
+    i = 0
     total_queued = 0
     total_results = 0
 
@@ -49,6 +49,8 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
 
     for i in range(n_initial):
         c = iterator.__next__()
+        c[0]['id'] = i
+        i += 1
         q_cases.put(c)
         case_set.add(case_to_tuple(c[0]))
 
@@ -60,7 +62,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     for i in range(n_initial - n_workers):
         result = q_results.get()
         iterator.store_result(result)
-        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
     while timer.time() - start_time < min_run_time:
@@ -69,10 +71,13 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
  
 
         iterator.store_result(result)
-        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
 
+        c = iterator.__next__()
+        c[0]['id'] = i
+        i += 1
         q_cases.put(c)
         case_set.add(case_to_tuple(c[0]))
         total_queued = total_queued + 1
@@ -80,13 +85,15 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
 
     result = q_results.get()
     iterator.store_result(result)
-    case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
+    case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
     total_results = total_results + 1
 
 
     
     test = 0
     for c in iterator:
+        c[0]['id'] = i
+        i += 1
         q_cases.put(c)
         case_set.add(case_to_tuple(c[0]))
         total_queued = total_queued + 1
@@ -95,7 +102,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
  
 
         iterator.store_result(result)
-        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
 
@@ -111,7 +118,7 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
             break
         
         iterator.store_result(result)
-        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3]}))
+        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
 

@@ -38,7 +38,7 @@ class Case:
 
         paths, total_cost, total_computation_time = solver.find_solution(print_results=False, return_costs=True)
 
-        return total_cost, total_computation_time, starts, goals, self.sim_id
+        return total_cost, total_computation_time, starts, goals, self.sim_id, self.id
 
 
 class Orchestrator:
