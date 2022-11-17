@@ -86,7 +86,7 @@ class Orchestrator:
 
     def store_result(self, results):
 
-        (total_cost, total_computation_time, starts, goals, sim_id) = results
+        (total_cost, total_computation_time, starts, goals, sim_id, id) = results
 
         print(total_cost, total_computation_time)
         # Build the dictionary that will eventually be the new row in the results table
