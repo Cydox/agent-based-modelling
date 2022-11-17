@@ -28,6 +28,7 @@ def worker(q_cases, q_results):
     while True:
         c = q_cases.get()
         case = Case(c[0], c[1], c[2], c[3])
+        case.id = c[0]['id']
         # print('running case')
         result = case.run()
         q_results.put(result)
