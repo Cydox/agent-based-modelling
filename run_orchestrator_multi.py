@@ -35,9 +35,8 @@ def worker(q_cases, q_results):
 
 import time as timer
 
-def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, iterator: Orchestrator, n_initial, n_workers, min_run_time=300):
+def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, iterator: Orchestrator, n_initial, n_workers):
 
-    start_time = timer.time()
     
     
     i = 0
@@ -66,22 +65,22 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
-    while timer.time() - start_time < min_run_time:
+    # while timer.time() - start_time < min_run_time:
 
-        result = q_results.get()
+    #     result = q_results.get()
  
 
-        iterator.store_result(result)
-        case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
-        total_results = total_results + 1
+    #     iterator.store_result(result)
+    #     case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
+    #     total_results = total_results + 1
 
 
-        c = iterator.__next__()
-        c[0]['id'] = i
-        i += 1
-        q_cases.put(c)
-        case_set.add(case_to_tuple(c[0]))
-        total_queued = total_queued + 1
+    #     c = iterator.__next__()
+    #     c[0]['id'] = i
+    #     i += 1
+    #     q_cases.put(c)
+    #     case_set.add(case_to_tuple(c[0]))
+    #     total_queued = total_queued + 1
 
 
     result = q_results.get()
@@ -164,7 +163,7 @@ if __name__ == '__main__':
                 planner=args.solver
             )
 
-            n_workers = 32
+            n_workers = 2
             n_initial = 200
 
             q_cases = multiprocessing.Queue()

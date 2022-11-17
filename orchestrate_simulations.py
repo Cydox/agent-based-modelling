@@ -12,6 +12,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import time as timer
+
 
 class Case:
     def __init__(self, input, planner, map, sim_id):
@@ -52,6 +54,8 @@ class Orchestrator:
         :param goal_groups: the possible goal_groups for each goal group
         :param planner: planner type used in the simulations
         """
+
+        self.start_time = timer.time()
 
         self.simulations_kpis = ['Cost', 'Computation time']
 
@@ -119,6 +123,9 @@ class Orchestrator:
         """
         n = 50
 
+        if timer.time() - self.start_time < 300:
+            return False
+
         if self.simulation_results.shape[0] >= n:
             slopes = []
             for kpi in self.simulations_kpis:
@@ -126,8 +133,8 @@ class Orchestrator:
                 x=self.simulation_results.index.to_list()[-m:]
                 y=self.simulation_results[kpi+'_var'].to_list()[-m:]
                 mask = ~np.isnan(x) & ~np.isnan(y)
-                regressor = scipy.stats.linregress(x=x[mask],
-                                                   y=y[mask])
+                regressor = scipy.stats.linregress(x=np.array(x)[mask],
+                                                   y=np.array(y)[mask])
                 slopes.append(regressor.slope)
 
             if self.simulation_id % 25 == 0:
