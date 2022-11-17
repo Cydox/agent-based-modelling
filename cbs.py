@@ -192,7 +192,7 @@ class CBSSolver(object):
                 if print_results:
                     self.print_results(parent)
                 if return_costs:
-                    return parent['paths'], get_sum_of_cost(parent['paths']), timer.time() - self.start_time
+                    return parent['paths'], get_sum_of_cost(parent['paths']), timer.process_time() - self.start_time
                 else:
                     return parent['paths']
 
