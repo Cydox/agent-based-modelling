@@ -121,7 +121,7 @@ class Orchestrator:
         """
         n = 50
 
-        if timer.time() - self.start_time < 300:  # run for at least 5 minutes
+        if timer.time() - self.start_time < 30:  # run for at least 30 seconds
             return False
 
         if self.simulation_results.shape[0] >= n:
