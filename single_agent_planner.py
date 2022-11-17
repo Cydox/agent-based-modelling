@@ -1,4 +1,5 @@
 import heapq
+import time as timer
 
 def move(loc, dir):
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
@@ -181,8 +182,12 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     push_node(open_list, root)
     # closed_list[((root['loc'], root['time']))] = root
 
-    while len(open_list) > 0:
+    start_time = timer.process_time()
+
+
+    while len(open_list) > 0 and timer.process_time() - start_time < 1.0:
         curr = pop_node(open_list)
+        #print('hey', len(open_list), curr['g_val'], root['h_val'])
 
         if curr['g_val'] > 2 * root['h_val'] + 10:
             # if g_val exceeds root's h_val by a lot, the path cannot be found and the code should stop.

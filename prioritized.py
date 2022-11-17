@@ -34,10 +34,13 @@ class PrioritizedPlanningSolver(object):
         constraints = []
 
         for i in range(self.num_of_agents):  # Find path for each agent
+            #print('before')
+            #print(self.my_map, ", ",self.starts[i], ", ", self.goals[i], ", ", self.heuristics[i], ", ", i, ", ", constraints)
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, constraints)
+            #print('after')
             if path is None:
-                return [], np.nan, timer.time() - start_time
+                return [], np.nan, timer.process_time() - start_time
             result.append(path)
 
             for agent in range(self.num_of_agents):
