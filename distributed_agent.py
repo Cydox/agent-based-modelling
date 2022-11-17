@@ -15,23 +15,26 @@ class AgentDistributed(object):
         """
 
         self.my_map = my_map
-        self.start = start
+        self.location = start
         self.goal = goal
         self.heuristics = heuristics
 
         self.path_history = [start]
-        self.location = start
-        self.start = start
-        self.goal = goal
         self.neighbors = []
 
-        self.plan = self.__a_star([])
+        self.plan = self.__a_star()
         self.planned_cost = len(self.plan)
 
     def time_step(self):
+        """"At every time step, move to the next plan step and remove this plan step from the plan.
+
+        Note: the plan contains the current location (this helped readability of the code), so therefore the
+        self.location is actually set to the second entry of the plan instead of first.
+        """
+
         try:
-            self.path_history.append(self.plan[0])
-            self.location = self.plan[0]
+            self.path_history.append(self.plan[1])
+            self.location = self.plan[1]
             self.plan = self.plan[1:]
         except IndexError:
             self.path_history.append(self.location)
@@ -40,32 +43,27 @@ class AgentDistributed(object):
         self.neighbors = neighbors
 
     def update_plan(self):
+        """" Updates plan: if a future conflict is detected with any of the neighbors, resolve it."""
         for n in self.neighbors:
             (col_loc, col_time) = self.__detect_collision(n)
-            if not col_loc is None:
-                self.__resolve_conflict(n, col_loc, col_time)
+            if col_loc is not None:
+                self.__resolve_conflict(n)
         
     def __detect_collision(self, n) -> tuple:
-        try:
-            collision = detect_collision([self.location] + self.plan, [n.location] + n.plan)
-            # detect_collision returns col_loc and time to collision. Time is currently one to low, but is no problem
-        except IndexError:
-            try:
-                collision = detect_collision([self.location] + self.plan, n.path_history)
-            except IndexError:
-                collision = detect_collision(self.path_history, [n.location] + n.plan)
-        return collision
+        """" Detects future collision between two agents plans """
 
-    def __resolve_conflict(self, n, col_loc, col_time):
+        return detect_collision(self.plan, n.plan)
+
+    def __resolve_conflict(self, n):
         other_agents = (set(n.neighbors) | set(self.neighbors)) - {self} - {n}
 
         # option 1: replan own plan
         constraints = self.__generate_constraints(other_agents | {n})
-        resolution_1 = self.__a_star(constraints, self.location)
+        resolution_1 = self.__a_star(constraints)
 
         # option 2: replan other agent's plan
         constraints = n.__generate_constraints(other_agents | {self})
-        resolution_2 = n.__a_star(constraints, n.location)
+        resolution_2 = n.__a_star(constraints)
 
         # no solution found
         if resolution_1 is None and resolution_2 is None:
@@ -86,9 +84,9 @@ class AgentDistributed(object):
             cost_2 = len(resolution_2) - len(n.plan)
 
         if cost_1 < cost_2:
-            self.plan = resolution_1[1:]
+            self.plan = resolution_1
         else:
-            n.plan = resolution_2[1:]
+            n.plan = resolution_2
 
     def __generate_constraints(self, agent_list) -> list:
         """"
@@ -99,7 +97,7 @@ class AgentDistributed(object):
         constraints = []
 
         for agent in agent_list:
-            agent_locations = [agent.location] + agent.plan
+            agent_locations = agent.plan
             for pseudo_time, loc in enumerate(agent_locations):
                 constraints.append(  # apply vertex constraints
                     {
@@ -126,9 +124,11 @@ class AgentDistributed(object):
 
         return constraints
 
-    def __a_star(self, constraints, start=None):
-        if start is None:
-            start = self.start
-        return a_star(self.my_map, start, self.goal, self.heuristics, self, constraints=constraints)
+    def __a_star(self, constraints=None):
+        """"Performs A* to create the plan for an agent. """
+        if constraints is None:
+            constraints = []
+
+        return a_star(self.my_map, self.location, self.goal, self.heuristics, self, constraints=constraints)
 
 
