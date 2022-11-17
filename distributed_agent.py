@@ -1,6 +1,7 @@
 from single_agent_planner import a_star
 from cbs import detect_collision, get_location
-# from run_experiments import print_mapf_instance
+
+# TODO : prepend curr loc to plan
 
 class AgentDistributed(object):
     """Aircraft object to be used in the distributed planner."""
@@ -70,7 +71,10 @@ class AgentDistributed(object):
         if resolution_1 is None and resolution_2 is None:
             raise Exception
 
-        # evaluate which resolution option is preferable
+        # Evaluate which resolution option is preferable.
+        # Note that this implementation varies from model properties. The model properties are defined as if agent 1
+        # and agent 2 resolve the conflict at the same time individually. To save computation time, the conflict is
+        # only being resolved once and possibly neighbor's plan is set.
         if resolution_1 is None:
             cost_1 = float('inf')
         else:

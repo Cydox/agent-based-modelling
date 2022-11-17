@@ -1,6 +1,7 @@
 import heapq
 import time as timer
 
+
 def move(loc, dir):
     directions = [(0, -1), (1, 0), (0, 1), (-1, 0)]
     return loc[0] + directions[dir][0], loc[1] + directions[dir][1]
@@ -112,8 +113,8 @@ def is_constrained(curr_loc: tuple, next_loc: tuple, next_time: int, constraint_
     #               any given constraint. For efficiency the constraints are indexed in a constraint_table
     #               by time step, see build_constraint_table.
 
-    # Edge constraints are defined as:
-    #   not allowed to be at constraint['loc'][1] at time step constraint['time'] coming from constraint['loc'][0]
+    # Edge constraints are defined as:  not allowed to be at constraint['loc'][1] at time step constraint['time']
+    # coming from constraint['loc'][0]
 
     try:
         for constraint in constraint_table[next_time]:  # loop through all constraints active for the next_time
@@ -148,14 +149,16 @@ def compare_nodes(n1, n2):
     return n1['g_val'] + n1['h_val'] < n2['g_val'] + n2['h_val']
 
 
-def goal_constrained(goal_loc, curr_time, curr_loc, constraint_table):
+def goal_constrained(goal_loc, curr_time, constraint_table):
+    """" The goal is constrained if there is any constraint in the constraint table at the agent's goal location, at a
+    time step later than the current time.
+    """
+
     keys = [key for key in constraint_table.keys() if key > curr_time]
 
     for key in keys:
         if goal_loc in [constraint['loc'] for constraint in constraint_table[key]]:
             return True
-        # elif goal_loc in [constraint['loc'][1] for constraint in constraint_table[key] if constraint['loc'][0] == curr_loc]:
-        #     return True
 
     return False
 
@@ -165,7 +168,9 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         start_loc   - start position
         goal_loc    - goal position
         agent       - the agent that is being re-planned
-        constraints - constraints defining where robot should or cannot go at each timestep
+        constraints - constraints defining where robot should or cannot go at each time step
+
+        :return list of nodes that form the path found
     """
 
     ##############################
@@ -180,7 +185,6 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
     h_value = h_values[start_loc]
     root = {'loc': start_loc, 'g_val': 0, 'h_val': h_value, 'parent': None, 'time': 0}
     push_node(open_list, root)
-    # closed_list[((root['loc'], root['time']))] = root
 
     start_time = timer.process_time()
 
@@ -195,14 +199,14 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
 
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
-        if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], curr['loc'], constraint_dict):
+        if curr['loc'] == goal_loc and not goal_constrained(goal_loc, curr['time'], constraint_dict):
             return get_path(curr)
 
         for dir in range(5):
             if dir < 4:
                 child_loc = move(curr['loc'], dir)
 
-                # filters out obstacles
+                # filters out obstacles or out-of-bounds nodes:
                 try:
                     if my_map[child_loc[0]][child_loc[1]] or child_loc[0] < 0 or child_loc[1] < 0:
                         # if this is true, child loc is either an obstacle or outside of map on left or top side
@@ -230,10 +234,13 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
                                   constraint_table=constraint_dict):
                 if (child['loc'], child['time']) in closed_list:
                     existing_node = closed_list[(child['loc'], child['time'])]
+
                     if compare_nodes(child, existing_node):
+                        # Mentioned in report: default closed list implementation is faulty so line is commented out.
                         # closed_list[(child['loc'], child['time'])] = child
                         push_node(open_list, child)
                 else:
+                    # Mentioned in report: default closed list implementation is faulty so line is commented out.
                     # closed_list[(child['loc'], child['time'])] = child
                     push_node(open_list, child)
 
