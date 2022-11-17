@@ -19,7 +19,7 @@ def save_unfinished(case_set: set):
     f.close()
 
 def case_to_tuple(case):
-    return (tuple(case['starts']), tuple(case['goals'], case['id']))
+    return (tuple(case['starts']), tuple(case['goals']), case['id'])
 
 def case_from_tuple(t):
     return {'starts': list(t[0]), 'goals': list(t[1])}
