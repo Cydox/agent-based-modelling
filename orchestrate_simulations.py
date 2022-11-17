@@ -123,7 +123,7 @@ class Orchestrator:
         """
         n = 50
 
-        if timer.time() - self.start_time < 300:
+        if timer.time() - self.start_time < 30:
             return False
 
         if self.simulation_results.shape[0] >= n:
