@@ -1,27 +1,25 @@
 import itertools
 import os
-
-import scipy.stats
+import time as timer
 
 from cbs import CBSSolver
-from independent import IndependentSolver
 from prioritized import PrioritizedPlanningSolver
-from distributed import DistributedPlanningSolver  # Placeholder for Distributed Planning
+from distributed import DistributedPlanningSolver
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
-import time as timer
+import scipy.stats
 
 
 class Case:
-    def __init__(self, input, planner, map, sim_id):
+    def __init__(self, input, planner, map, sim_id, case_id):
         """"Initiates a Case instance. Used to run one certain simulation with a planner, map, and agent input."""
         self.input = input
         self.planner = planner
         self.map = map
         self.sim_id = sim_id
+        self.id = case_id
 
     def run(self):
         input = self.input
@@ -44,11 +42,11 @@ class Case:
 
 
 class Orchestrator:
-    def __init__(self, map, num_agents: dict, start_groups: dict, goal_groups: dict, planner):
+    def __init__(self, my_map, num_agents: dict, start_groups: dict, goal_groups: dict, planner):
         """" Initiates orchestrator iterator. Determines all possible start-goal combinations that fit the inputs. So
         that is the cartesian product of all the possible start-goal combinations for each agent group.
         
-        :param map: a map instance
+        :param my_map: a map instance
         :param num_agents: the number of agents per agent group
         :param start_groups: the possible start location for each agent group
         :param goal_groups: the possible goal_groups for each goal group
@@ -75,7 +73,7 @@ class Orchestrator:
         self.simulation_inputs = []
         self.simulation_id = 0
 
-        self.map = map
+        self.map = my_map
         self.planner = planner
 
         self.num_agents = num_agents
@@ -123,16 +121,16 @@ class Orchestrator:
         """
         n = 50
 
-        if timer.time() - self.start_time < 30:
+        if timer.time() - self.start_time < 30:  # run for at least 30 seconds
             return False
 
         if self.simulation_results.shape[0] >= n:
             slopes = []
-            for kpi in self.simulations_kpis:
-                m = round(len(self.simulation_results) * 0.25)
+            for kpi in self.simulations_kpis:  # for each kpi check if slope of trend line is below threshold
+                m = round(len(self.simulation_results) * 0.25)  # only check for last quarter of results
                 x=self.simulation_results.index.to_list()[-m:]
                 y=self.simulation_results[kpi+'_var'].to_list()[-m:]
-                mask = ~np.isnan(x) & ~np.isnan(y)
+                mask = ~np.isnan(x) & ~np.isnan(y)  # remove nans for runs that took to long
                 regressor = scipy.stats.linregress(x=np.array(x)[mask],
                                                    y=np.array(y)[mask])
                 slopes.append(regressor.slope)
@@ -151,7 +149,7 @@ class Orchestrator:
                     print(f'Could not save intermediate results for due to: {x}')
                     pass
 
-            # If all slopes fall within threshold:
+            # If all slopes fall within slope threshold:
             if len(
                     [slope for slope in slopes if -self.slope_threshold < slope < self.slope_threshold]
                    ) == len(self.simulations_kpis):
@@ -163,12 +161,16 @@ class Orchestrator:
         return self
 
     def __next__(self):
+        """"This is the iterator function. This is what parses the next input parameters for a simulation run.
+        Stops if StopIteration is raised, so that is when the coefficient of variation for each KPI is stable."""
+
         if self._is_stable():
             raise StopIteration
         else:
             starts = []
             goals = []
 
+            # For each agent group with n agents, pick n random start and goal locations.
             for agent_group in self.agent_groups:
                 num_agents = self.num_agents[agent_group]
 
@@ -183,14 +185,13 @@ class Orchestrator:
                 'goals': goals
             }
 
-            self.simulation_inputs.append(next_input)
+            self.simulation_inputs.append(next_input)  # save the input for logging purposes
             self.simulation_id += 1
             return next_input, self.planner, self.map, self.simulation_id
 
     def save_results(self):
         """"Stores the results of the simulations in a .csv file and a plot figure. """
         # save the table with results
-        # self.simulation_results.sort_index(inplace=True)
         self.simulation_results.reset_index(inplace=True)
         self.simulation_results.to_csv(f'simulation_results/{self.file_name}_final.csv', index=False)
 
@@ -208,10 +209,7 @@ class Orchestrator:
         plt.legend()
         fig = plt.gcf()
         fig.set_size_inches(18.5, 10.5)
-        # plt.show()
 
         plt.savefig(f'simulation_results/{self.file_name}.png',
                     dpi=100)
         plt.close()
-
-

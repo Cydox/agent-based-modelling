@@ -19,7 +19,7 @@ def save_unfinished(case_set: set):
     f.close()
 
 def case_to_tuple(case):
-    return (tuple(case['starts']), tuple(case['goals']), case['id'])
+    return tuple(case['starts']), tuple(case['goals']), case['id']
 
 def case_from_tuple(t):
     return {'starts': list(t[0]), 'goals': list(t[1])}
@@ -27,18 +27,19 @@ def case_from_tuple(t):
 def worker(q_cases, q_results):
     while True:
         c = q_cases.get()
-        case = Case(c[0], c[1], c[2], c[3])
-        case.id = c[0]['id']
+        case = Case(c[0], c[1], c[2], c[3], c[0]['id'])
+
         # print('running case')
         result = case.run()
         q_results.put(result)
 
 import time as timer
 
-def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, iterator: Orchestrator, n_initial, n_workers):
-
-    
-    
+def generator(q_cases: multiprocessing.Queue,
+              q_results: multiprocessing.Queue,
+              iterator: Orchestrator,
+              n_initial,
+              n_workers):
     i = 0
     total_queued = 0
     total_results = 0
@@ -55,9 +56,6 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         case_set.add(case_to_tuple(c[0]))
 
     total_queued = total_queued + n_initial
-
-
-
 
     for i in range(n_initial - n_workers):
         result = q_results.get()
@@ -82,14 +80,11 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     #     case_set.add(case_to_tuple(c[0]))
     #     total_queued = total_queued + 1
 
-
     result = q_results.get()
     iterator.store_result(result)
     case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
     total_results = total_results + 1
 
-
-    
     test = 0
     for c in iterator:
         c[0]['id'] = i
@@ -99,12 +94,10 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         total_queued = total_queued + 1
 
         result = q_results.get()
- 
 
         iterator.store_result(result)
         case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
-
 
     print('decided to stop, let remaining workers finish')
     while total_queued > total_results:
@@ -121,9 +114,6 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
         case_set.remove(case_to_tuple({'starts': result[2], 'goals': result[3], 'id': result[5]}))
         total_results = total_results + 1
 
-
-
-
     print('done... ')
     print (total_queued)
     print (total_results)
@@ -132,7 +122,6 @@ def generator(q_cases: multiprocessing.Queue, q_results: multiprocessing.Queue, 
     save_unfinished(case_set)
 
     iterator.save_results()
-
 
 
 if __name__ == '__main__':
@@ -156,7 +145,7 @@ if __name__ == '__main__':
             num_agents = {agent_groups[i]: size_combination[i] for i in range(len(agent_groups))}
 
             simulation_orchestrator = Orchestrator(
-                map=my_map,
+                my_map=my_map,
                 num_agents=num_agents,
                 start_groups=start_groups,
                 goal_groups=goal_groups,
