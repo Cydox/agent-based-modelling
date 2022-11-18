@@ -101,10 +101,10 @@ class Orchestrator:
 
         # Now for each KPI, store mean, std and variation coefficient in the dictionary as well
         for kpi in self.simulations_kpis:
-            simulation_results[kpi+'_mean'] = np.append(self.simulation_results[kpi].to_numpy(),
-                                                        simulation_results[kpi]).mean()
-            simulation_results[kpi+'_std'] = np.append(self.simulation_results[kpi].to_numpy(),
-                                                       simulation_results[kpi]).std()
+            simulation_results[kpi+'_mean'] = np.nanmean(np.append(self.simulation_results[kpi].to_numpy(dtype='float64'),
+                                                        simulation_results[kpi]))
+            simulation_results[kpi+'_std'] = np.nanstd(np.append(self.simulation_results[kpi].to_numpy(dtype='float64'),
+                                                       simulation_results[kpi]))
 
             # Coefficient of variation in percentage:
             simulation_results[kpi+'_var'] = simulation_results[kpi+'_std'] / simulation_results[kpi+'_mean'] * 100
