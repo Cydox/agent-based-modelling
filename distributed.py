@@ -1,5 +1,6 @@
 import time as timer
 from scipy.spatial import distance
+import numpy as np
 
 from single_agent_planner import compute_heuristics, get_sum_of_cost
 from distributed_agent import AgentDistributed
@@ -40,8 +41,15 @@ class DistributedPlanningSolver(object):
         # Initialize constants       
         start_time = timer.process_time()  # using perf_counter as time.time() is bad practice
 
-        while not self.solved:  # step through time until solved
-            self.time_step()
+        try:
+            while not self.solved:  # step through time until solved
+                self.time_step()
+        except:
+            computation_time = timer.process_time() - start_time
+            if return_costs:
+                return [], np.nan, computation_time
+            else:
+                return []
 
         computation_time = timer.process_time() - start_time
         result = [agent.path_history for agent in self.agents]  # list of agent paths.
