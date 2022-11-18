@@ -40,7 +40,7 @@ class DistributedPlanningSolver(object):
         # Initialize constants       
         start_time = timer.process_time()  # using perf_counter as time.time() is bad practice
 
-        while not self.solved: # step through time until solved
+        while not self.solved:  # step through time until solved
             self.time_step()
 
         computation_time = timer.process_time() - start_time
@@ -80,7 +80,8 @@ class DistributedPlanningSolver(object):
         for agent in self.agents:
             agent.time_step()
 
-        self.solved = all([len(agent.plan) == 0 for agent in self.agents])  # if all agents at goal loc: solved.
+        # if all agents at goal loc and have no more plans, then it is solved
+        self.solved = all([(agent.location == agent.goal) & (len(agent.plan) == 1) for agent in self.agents])
 
     @staticmethod
     def _distance(agent1, agent2) -> float:
