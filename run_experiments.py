@@ -125,6 +125,9 @@ if __name__ == '__main__':
 
     result_file = open("results.csv", "w", buffering=1)
 
+    if len(glob.glob(args.instance)) == 0:
+        raise FileNotFoundError(f'No files found which match file name prefix {args.instance}')
+
     for file in sorted(glob.glob(args.instance)):
 
         print(f"***Import an instance: {file}***")
@@ -153,6 +156,8 @@ if __name__ == '__main__':
         cost = get_sum_of_cost(paths)
         result_file.write("{},{}\n".format(file, cost))
 
+        if len(paths) == 0:
+            raise Exception(f'No solutions found!')
 
         # if not args.batch:
         print("***Test paths on a simulation***")
