@@ -44,7 +44,8 @@ class DistributedPlanningSolver(object):
         try:
             while not self.solved:  # step through time until solved
                 self.time_step()
-        except:
+        except Exception as x:
+            print(x)
             computation_time = timer.process_time() - start_time
             if return_costs:
                 return [], np.nan, computation_time
